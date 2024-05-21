@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: "cluster-appset"
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: "https://github.com/DavidFair/cloud-deployed-apps.git"
+        revision: "prototype_folder_flows"
+        files:
+          - path: "envs/unset/*/infra-values.yaml"
+
+  template:
+    metadata:
+      name: "{{ index .path.segments 1 }}-{{ .path.basename }}-cluster"
+      # All applications need to go into the ArgoCD namespace
+      namespace: argocd
+    spec:
+      project: default
+      sources:
+        - chart: openstack-cluster
+          repoURL: https://stackhpc.github.io/capi-helm-charts
+          targetRevision: "0.6.0"
+          helm:
+            valueFiles:
+              # Bring in default values
+              - "$capi-values/values.yaml"
+              - "$capi-values/flavors.yaml"
+              - "$capi-values/user-values.yaml"
+              # Bring in values that are specific to this application from infra-values.yaml
+              - "$values/{{ .path.path }}/{{ .path.filename }}"
+              # And the credentials
+              - "$values/secrets/{{ index .path.segments 1 }}/{{ .path.basename }}-app-creds.yaml"
+        - repoURL: "https://github.com/DavidFair/cloud-deployed-apps.git"
+          targetRevision: "prototype_folder_flows"
+          ref: values
+        - repoURL: "https://github.com/stfc/cloud-capi-values.git"
+          targetRevision: "master"
+          ref: capi-values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "clusters"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: true

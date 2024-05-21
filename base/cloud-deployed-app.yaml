@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-deployed-apps
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: "https://github.com/DavidFair/cloud-deployed-apps.git"
+    targetRevision: "prototype_folder_flows"
+    # The component should override this to the correct overlay (cluster)
+    path: base
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: true

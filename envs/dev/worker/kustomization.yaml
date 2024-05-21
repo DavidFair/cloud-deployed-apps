@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../base
+  - "cm.yaml"
+
+components:
+  - ../../../components/longhorn
+
+patches:
+  # Ensure overlay points to self
+  - target:
+      kind: Application
+      name: cloud-deployed-apps
+    path: "patch_overlay_path.yaml"

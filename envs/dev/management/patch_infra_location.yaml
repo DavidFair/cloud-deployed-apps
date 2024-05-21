@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: "cluster-appset"
+spec:
+  generators:
+    - git:
+        repoURL: "https://github.com/DavidFair/cloud-deployed-apps.git"
+        revision: "prototype_folder_flows"
+        files:
+          - path: "envs/dev/*/infra-values.yaml"
